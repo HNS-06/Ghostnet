@@ -1,0 +1,8 @@
+anthropic>=0.30.0
+rich>=13.7.0
+flask>=3.0.0
+requests>=2.31.0
+
+# Optional (for real scanning — requires root/admin privileges):
+# scapy>=2.5.0
+# python-nmap>=0.7.1
