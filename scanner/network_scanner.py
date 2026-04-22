@@ -75,7 +75,13 @@ class NetworkScanner:
 
     def _check_scapy(self) -> bool:
         try:
-            import scapy  # noqa
+            import logging
+            logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+            logging.getLogger("scapy.loading").setLevel(logging.ERROR)
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                import scapy.all  # noqa
             return True
         except ImportError:
             return False

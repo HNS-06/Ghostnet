@@ -15,6 +15,9 @@ import sys
 import argparse
 from cli.engine import GhostNetCLI
 
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
+
 def main():
     parser = argparse.ArgumentParser(
         prog="ghostnet",
