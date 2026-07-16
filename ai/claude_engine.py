@@ -83,7 +83,12 @@ class ClaudeEngine:
                     messages=[{"role": "user", "content": prompt}]
                 )
                 raw = response.content[0].text.strip()
-                if raw.startswith("```"): raw = raw.split("```")[1].strip("json")
+                if raw.startswith("```"):
+                    parts = raw.split("```")
+                    raw = parts[1]
+                    if raw.startswith("json"):
+                        raw = raw[4:]
+                    raw = raw.strip()
                 return json.loads(raw)
             except Exception as e:
                 pass

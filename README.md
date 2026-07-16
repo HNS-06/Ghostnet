@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# Ghostnet
-=======
 # 👻 GhostNet
 ### AI-Powered Network Intelligence System · Anthropic Hackathon 2025
 
@@ -172,4 +169,4 @@ MIT License. Built for the Anthropic Hackathon 2025.
 ---
 
 *"The best security tool is one you actually use."*
->>>>>>> b31021d (Initial Commit)
+

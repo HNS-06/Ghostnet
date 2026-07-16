@@ -11,6 +11,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich import box
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.text import Text
 from database.db import GhostDB
 
 console = Console(highlight=False)
@@ -139,12 +140,61 @@ class GhostNetCLI:
         else:
              console.print(f"[{DARK_GREEN}]Available Modules: bluetooth_scanner, usb_monitor, pcap_dumper[/]")
 
+    def _signal_bars(self, strength: int) -> Text:
+        from rich.text import Text
+        filled = min(max(int(strength), 0), 4)
+        t = Text()
+        chars = ["▂", "▄", "▆", "█"]
+        for i, ch in enumerate(chars):
+            t.append(ch, style=f"bold #00ff9c" if i < filled else f"bold #004d2e")
+        return t
+
     def cmd_scan(self):
         console.print(f"[{NEON_GREEN}]◈ EXECUTING AD-HOC TELEMETRY SWEEP[/]")
         from scanner.network_scanner import NetworkScanner
         n = NetworkScanner().scan()
         self.db.store_networks(n)
-        console.print(f"[{DARK_GREEN}]> Processed {len(n)} networks.[/]")
+        
+        # Display the results in a clean table
+        t = Table(box=box.MINIMAL, border_style="#004d2e", expand=True)
+        t.add_column("SSID", style=NEON_GREEN)
+        t.add_column("BSSID", style="dim green")
+        t.add_column("SIGNAL", justify="center")
+        t.add_column("RSSI", justify="right", style="dim green")
+        t.add_column("ENC", justify="center")
+        t.add_column("CH", justify="right", style="dim green")
+        t.add_column("FREQ", justify="right", style="dim green")
+        t.add_column("VENDOR", style="dim green")
+
+        for net in n:
+            ssid = net.get("ssid", "")
+            if not ssid or net.get("hidden", False):
+                ssid = "[HIDDEN]"
+            
+            bssid = net.get("bssid", "xx:xx:xx:xx:xx:xx")
+            sig = net.get("signal", 0)
+            rssi = net.get("rssi", -70)
+            enc = net.get("encryption", "OPEN")
+            ch = net.get("channel", 0)
+            freq = net.get("frequency", 2.4)
+            vendor = net.get("vendor", "Unknown")
+
+            enc_style = "bold #ff003c" if enc == "OPEN" else "bold #00ff9c"
+            enc_text = Text(enc, style=enc_style)
+
+            t.add_row(
+                ssid,
+                bssid,
+                self._signal_bars(sig),
+                f"{rssi} dBm",
+                enc_text,
+                str(ch),
+                f"{freq} GHz",
+                vendor
+            )
+        
+        console.print(t)
+        console.print(f"[{DARK_GREEN}]> Processed and saved {len(n)} networks to SQLite baseline.[/]")
 
     def cmd_analyze(self):
         console.print(f"[{NEON_GREEN}]◈ INITIATING EXPLAINABLE AI LAYER[/]")
@@ -154,7 +204,13 @@ class GhostNetCLI:
         console.print(r.get("threat_narrative", "Analysis complete."))
 
     def cmd_predict(self):
-        pass
+        console.print(f"[{NEON_GREEN}]◈ PREDICTIVE FORECAST[/]")
+        from ai.claude_engine import ClaudeEngine
+        result = ClaudeEngine().deep_analysis(
+            forensic_timeline=self.db.get_timeline(),
+            network_clusters=[],
+        )
+        console.print(result.get("predictive_forecast", "No forecast available."))
 
     def cmd_api(self):
         from api.server import run_api

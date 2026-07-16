@@ -125,10 +125,11 @@ def get_aura():
 def analyze():
     """POST /analyze — trigger AI analysis via Claude"""
     db = _db()
-    nets = db.get_recent_networks()
     from ai.claude_engine import ClaudeEngine
-    engine = ClaudeEngine()
-    result = engine.analyze(nets)
+    result = ClaudeEngine().deep_analysis(
+        forensic_timeline=db.get_timeline(),
+        network_clusters=[],
+    )
     return jsonify(result)
 
 
@@ -136,8 +137,13 @@ def analyze():
 def predict():
     """GET /predict?hours=4 — risk forecast"""
     hours = int(request.args.get("hours", 4))
+    db = _db()
     from ai.claude_engine import ClaudeEngine
-    result = ClaudeEngine().predict(hours=hours)
+    result = ClaudeEngine().deep_analysis(
+        forensic_timeline=db.get_timeline(),
+        network_clusters=[],
+    )
+    result["requested_hours"] = hours
     return jsonify(result)
 
 @app.route("/export_report", methods=["GET"])
@@ -145,8 +151,9 @@ def export_report():
     """GET /export_report — Generates a markdown executive summary."""
     db = _db()
     nets = db.get_recent_networks()
+    devs = db.get_recent_devices()
     from ai.claude_engine import ClaudeEngine
-    report = ClaudeEngine().generate_executive_report(nets)
+    report = ClaudeEngine().generate_executive_report(nets, devs)
     return jsonify({"report": report})
 
 
